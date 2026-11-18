@@ -31,6 +31,7 @@ from .go_dispatch import resolve_go_interface_dispatch
 from .swift_dispatch import resolve_swift_protocol_dispatch
 from .pascal_class_resolution import resolve_pascal_base_classes
 from .pascal_resolution import resolve_pascal_inherited_calls
+from .pascal_singleton_resolution import resolve_pascal_singleton_calls
 from .dfm_resolution import resolve_dfm_handlers
 from .cpp_resolution import CppTypeLookup
 from .markdown_resolution import MARKDOWN_MENTION_SUFFIXES, resolve_markdown_mentions
@@ -9880,6 +9881,19 @@ register_language_resolver(
         "pascal_inherited_calls",
         frozenset({".pas", ".pp", ".dpr", ".dpk", ".inc"}),
         resolve_pascal_inherited_calls,
+    )
+)
+# Pascal/Delphi global-singleton call resolution: `DM.Open`, where `DM` is a
+# unit-level `var` holding a data module or form. The per-file pass drops the
+# qualifier and looks the member name up in the CALLER's scope, so the call is
+# left unresolved. Lives in graphify.pascal_singleton_resolution; registered
+# AFTER pascal_base_classes, whose repaired `inherits` chain it walks to find a
+# method the global's class inherits.
+register_language_resolver(
+    LanguageResolver(
+        "pascal_singleton_calls",
+        frozenset({".pas", ".pp", ".dpr", ".dpk", ".inc"}),
+        resolve_pascal_singleton_calls,
     )
 )
 # Delphi/Lazarus form-to-unit resolution: a form (.dfm/.lfm) and the unit that
